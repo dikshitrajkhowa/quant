@@ -1,7 +1,0 @@
-fastapi
-uvicorn[standard]
-yfinance
-pandas
-numpy
-matplotlib
-pydantic
