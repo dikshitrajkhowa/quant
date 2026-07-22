@@ -1,5 +1,7 @@
 # Dependency folders
 node_modules/
+quant-env/
+quant-env
 venv/
 .venv/
 env/
