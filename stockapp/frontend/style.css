@@ -313,9 +313,19 @@ select:focus, input:focus, .seg-btn:focus-visible, .run-btn:focus-visible {
   background: var(--panel-raised);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 10px;
+  padding: 14px 16px 16px;
+  margin-bottom: 14px;
 }
-.chart-wrap img { width: 100%; display: block; border-radius: 4px; }
+.chart-wrap:last-child { margin-bottom: 0; }
+.chart-title {
+  margin: 0 0 10px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+.chart-canvas-box { position: relative; height: 260px; }
+.chart-canvas-box canvas { width: 100% !important; height: 100% !important; }
 
 .foot {
   text-align: center;

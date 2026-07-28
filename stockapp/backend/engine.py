@@ -1,15 +1,9 @@
 """
 Core backtest engine: fetches price data, runs the vectorized backtest,
-computes performance metrics, and renders a chart to a base64 PNG string
-(so the frontend can display it with a plain <img> tag - no chart JS lib needed).
+computes performance metrics, and packages series data as plain JSON
+(the frontend renders it with Chart.js so values show on hover).
 """
 
-import base64
-import io
-
-import matplotlib
-matplotlib.use("Agg")  # headless rendering, no display needed
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import yfinance as yf
@@ -92,32 +86,21 @@ def decide_action(data: pd.DataFrame) -> str:
     return "STAY OUT"
 
 
-def render_chart(data: pd.DataFrame, ticker: str, strategy_label: str,
-                  indicator_cols: list[str]) -> str:
-    """Render price+indicators and equity curve, return as base64-encoded PNG."""
-    fig, axes = plt.subplots(2, 1, figsize=(10, 7), sharex=True,
-                              gridspec_kw={"height_ratios": [2, 1]})
+def build_chart_data(data: pd.DataFrame, indicator_cols: list[str]) -> dict:
+    """
+    Package everything the frontend needs to draw interactive, hoverable
+    charts with Chart.js: date labels, price + indicator series, and the
+    strategy vs. benchmark equity curves.
+    """
+    dates = [d.strftime("%Y-%m-%d") for d in data.index]
 
-    axes[0].plot(data.index, data["Close"], label="Close", color="#4C9AFF", linewidth=1.2)
-    palette = ["#F2994A", "#27AE60", "#BB6BD9"]
-    for i, col in enumerate(indicator_cols):
-        if col in data.columns:
-            axes[0].plot(data.index, data[col], label=col, color=palette[i % len(palette)], linewidth=1)
-    axes[0].set_title(f"{ticker} — {strategy_label}", fontsize=12, fontweight="bold")
-    axes[0].legend(loc="upper left", fontsize=8)
-    axes[0].grid(alpha=0.25)
+    def series(col):
+        return [None if pd.isna(v) else round(float(v), 2) for v in data[col]]
 
-    axes[1].plot(data.index, data["equity"], label="Strategy", color="#27AE60", linewidth=1.4)
-    axes[1].plot(data.index, data["benchmark_equity"], label="Buy & Hold", color="#888888",
-                 linestyle="--", linewidth=1.2)
-    axes[1].set_title("Equity Curve", fontsize=11)
-    axes[1].legend(loc="upper left", fontsize=8)
-    axes[1].grid(alpha=0.25)
-
-    plt.tight_layout()
-
-    buf = io.BytesIO()
-    fig.savefig(buf, format="png", dpi=140)
-    plt.close(fig)
-    buf.seek(0)
-    return base64.b64encode(buf.read()).decode("utf-8")
+    return {
+        "dates": dates,
+        "close": series("Close"),
+        "indicators": {col: series(col) for col in indicator_cols if col in data.columns},
+        "equity": series("equity"),
+        "benchmark_equity": series("benchmark_equity"),
+    }

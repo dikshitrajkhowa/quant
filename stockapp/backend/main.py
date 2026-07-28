@@ -23,7 +23,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
-from engine import fetch_price_data, run_backtest, decide_action, render_chart
+from engine import fetch_price_data, run_backtest, decide_action, build_chart_data
 from strategies import STRATEGY_REGISTRY
 
 app = FastAPI(title="NSE/BSE Strategy Backtester")
@@ -113,10 +113,8 @@ def backtest(req: BacktestRequest):
     data = result["data"]
     decision = decide_action(data)
 
-    indicator_cols = [c for c in data.columns if c.startswith(("sma_", "rsi", "macd"))
-                       and c not in ("rsi",)]  # rsi plotted separately if needed; keep price panel clean
-    price_indicator_cols = [c for c in data.columns if c.startswith("sma_")]
-    chart_b64 = render_chart(data, ticker, strategy_meta["label"], price_indicator_cols)
+    indicator_cols = [c for c in data.columns if c.startswith(("sma_", "rsi", "macd"))]
+    chart_data = build_chart_data(data, indicator_cols)
 
     return {
         "ticker": ticker,
@@ -125,7 +123,7 @@ def backtest(req: BacktestRequest):
         "explanation": explanation,
         "period": {"start": str(data.index[0].date()), "end": str(data.index[-1].date())},
         "metrics": result["metrics"],
-        "chart_png_base64": chart_b64,
+        "chart_data": chart_data,
     }
 
 

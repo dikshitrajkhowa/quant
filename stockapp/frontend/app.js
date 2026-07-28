@@ -21,12 +21,18 @@ const els = {
   explanationText: document.getElementById("explanationText"),
   periodText: document.getElementById("periodText"),
   metricsGrid: document.getElementById("metricsGrid"),
-  chartImg: document.getElementById("chartImg"),
+  priceChartCanvas: document.getElementById("priceChart"),
+  equityChartCanvas: document.getElementById("equityChart"),
+  priceChartTitle: document.getElementById("priceChartTitle"),
   tapeTrack: document.getElementById("tapeTrack"),
 };
 
 let strategies = [];
 let selectedExchange = "NSE";
+let priceChart = null;
+let equityChart = null;
+
+const INDICATOR_COLORS = ["#f2994a", "#bb6bd9", "#e0a458", "#5ec8e0"];
 
 function setStatus(state) {
   els.statusDot.className = "dot " + (state === "busy" ? "busy" : state === "live" ? "live" : "");
@@ -123,7 +129,113 @@ function renderResults(payload) {
     metricCard("Buy & hold CAGR", `${m.benchmark_CAGR_pct}%`),
   ].join("");
 
-  els.chartImg.src = `data:image/png;base64,${payload.chart_png_base64}`;
+  renderCharts(payload);
+}
+
+const CHART_FONT = { family: "IBM Plex Mono", size: 11 };
+const GRID_COLOR = "rgba(255,255,255,0.06)";
+const TICK_COLOR = "#8890a0";
+
+function baseChartOptions(yFormatter) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: { duration: 250 },
+    interaction: { mode: "index", intersect: false },
+    plugins: {
+      legend: {
+        labels: { color: TICK_COLOR, font: CHART_FONT, boxWidth: 12, usePointStyle: true },
+      },
+      tooltip: {
+        mode: "index",
+        intersect: false,
+        backgroundColor: "#1e232e",
+        borderColor: "#2a3040",
+        borderWidth: 1,
+        titleColor: "#e9eaee",
+        bodyColor: "#e9eaee",
+        titleFont: CHART_FONT,
+        bodyFont: CHART_FONT,
+        padding: 10,
+        callbacks: yFormatter ? { label: (ctx) => yFormatter(ctx) } : undefined,
+      },
+    },
+    scales: {
+      x: {
+        grid: { color: GRID_COLOR },
+        ticks: { color: TICK_COLOR, font: CHART_FONT, maxTicksLimit: 8 },
+      },
+      y: {
+        grid: { color: GRID_COLOR },
+        ticks: { color: TICK_COLOR, font: CHART_FONT },
+      },
+    },
+  };
+}
+
+function renderCharts(payload) {
+  const cd = payload.chart_data;
+  els.priceChartTitle.textContent = `${payload.ticker} — ${payload.strategy}`;
+
+  const priceDatasets = [
+    {
+      label: "Close",
+      data: cd.close,
+      borderColor: "#4c9aff",
+      backgroundColor: "transparent",
+      borderWidth: 1.4,
+      pointRadius: 0,
+      tension: 0,
+    },
+  ];
+  Object.keys(cd.indicators).forEach((name, i) => {
+    priceDatasets.push({
+      label: name,
+      data: cd.indicators[name],
+      borderColor: INDICATOR_COLORS[i % INDICATOR_COLORS.length],
+      backgroundColor: "transparent",
+      borderWidth: 1.2,
+      pointRadius: 0,
+      tension: 0,
+    });
+  });
+
+  if (priceChart) priceChart.destroy();
+  priceChart = new Chart(els.priceChartCanvas, {
+    type: "line",
+    data: { labels: cd.dates, datasets: priceDatasets },
+    options: baseChartOptions((ctx) => `${ctx.dataset.label}: ${ctx.parsed.y ?? "—"}`),
+  });
+
+  if (equityChart) equityChart.destroy();
+  equityChart = new Chart(els.equityChartCanvas, {
+    type: "line",
+    data: {
+      labels: cd.dates,
+      datasets: [
+        {
+          label: "Strategy",
+          data: cd.equity,
+          borderColor: "#4fb6a6",
+          backgroundColor: "transparent",
+          borderWidth: 1.6,
+          pointRadius: 0,
+          tension: 0,
+        },
+        {
+          label: "Buy & Hold",
+          data: cd.benchmark_equity,
+          borderColor: "#888888",
+          backgroundColor: "transparent",
+          borderDash: [5, 4],
+          borderWidth: 1.3,
+          pointRadius: 0,
+          tension: 0,
+        },
+      ],
+    },
+    options: baseChartOptions((ctx) => `${ctx.dataset.label}: ₹${ctx.parsed.y?.toLocaleString("en-IN") ?? "—"}`),
+  });
 }
 
 async function runBacktest() {

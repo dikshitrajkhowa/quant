@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -98,7 +99,13 @@
         <div class="metrics-grid" id="metricsGrid"></div>
 
         <div class="chart-wrap">
-          <img id="chartImg" alt="Backtest chart" />
+          <p class="chart-title" id="priceChartTitle">Price</p>
+          <div class="chart-canvas-box"><canvas id="priceChart"></canvas></div>
+        </div>
+
+        <div class="chart-wrap">
+          <p class="chart-title">Equity Curve</p>
+          <div class="chart-canvas-box"><canvas id="equityChart"></canvas></div>
         </div>
 
       </div>
