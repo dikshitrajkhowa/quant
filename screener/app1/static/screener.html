@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Screener · NSE Quant</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%232a78d6'/><path d='M6 22l7-7 5 4 8-10' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+  <link rel="stylesheet" href="/static/styles.css?v=20261010">
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+</head>
+<body>
+<header class="topnav" id="topnav"></header>
+<div class="layout">
+  <!-- ============================ Sidebar ============================ -->
+  <aside class="sidebar" id="sidebar">
+
+    <section class="panel">
+      <h2>Data source</h2>
+      <label class="field"><select id="source" aria-label="Data source"></select></label>
+      <p class="hint" id="source-hint"></p>
+    </section>
+
+    <section class="panel">
+      <h2>Strategy</h2>
+      <label class="field">
+        <span>Screening strategy</span>
+        <select id="strategy"></select>
+      </label>
+      <p class="hint" id="strategy-desc"></p>
+      <div id="params"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Universe &amp; display</h2>
+      <label class="field">
+        <span>Universe</span>
+        <select id="universe"></select>
+      </label>
+      <label class="field">
+        <span>Top N to display <output id="top_n-out">20</output></span>
+        <input type="range" id="top_n" min="5" max="50" step="5" value="20">
+      </label>
+    </section>
+
+    <details class="panel">
+      <summary>Filters</summary>
+      <label class="field"><span>Min price (₹)</span><input type="number" id="min_price" min="0" step="10" value="0"></label>
+      <label class="field"><span>Min 20-day avg volume</span><input type="number" id="min_avg_volume" min="0" step="50000" value="0"></label>
+      <label class="field"><span>Min trading days of history</span><input type="number" id="min_history" min="50" max="500" step="10" value="200"></label>
+    </details>
+
+    <details class="panel">
+      <summary>Advanced</summary>
+      <label class="field">
+        <span>Trading days in charts <output id="chart_days-out">120</output></span>
+        <input type="range" id="chart_days" min="30" max="500" step="10" value="120">
+      </label>
+      <label class="field"><span>Scan only first N tickers (0 = all)</span><input type="number" id="limit" min="0" step="50" value="0"></label>
+      <label class="field"><span>Tickers per download batch</span><input type="number" id="batch_size" min="20" max="500" step="20" value="100"></label>
+    </details>
+
+    <div class="actions">
+      <button class="btn primary" id="run">Run screener</button>
+      <button class="btn" id="reload" title="Re-download price data for this universe">Refresh data</button>
+    </div>
+    <p class="hint" id="data-info"></p>
+  </aside>
+
+  <!-- ============================ Main ============================ -->
+  <main class="main">
+    <header class="page-head">
+      <div>
+        <h1 id="title">Strategy screener</h1>
+        <p class="sub" id="subtitle">Pick a strategy and universe, then click <b>Run screener</b>.</p>
+      </div>
+    </header>
+
+    <div id="progress" class="progress" hidden>
+      <div class="progress-label" id="progress-label">Loading…</div>
+      <div class="progress-track"><div class="progress-bar" id="progress-bar"></div></div>
+    </div>
+    <div id="alert" class="alert" hidden></div>
+
+    <section id="empty" class="empty">
+      <p>Choose a strategy and universe in the sidebar, then click <b>Run screener</b>.</p>
+      <p class="hint">Scanning all NSE stocks takes a few minutes the first time. After that, switching strategies
+        and parameters re-runs instantly on the downloaded data.</p>
+    </section>
+
+    <section id="results" hidden>
+      <div class="kpis">
+        <div class="kpi"><span class="kpi-label">Stocks evaluated</span><span class="kpi-value" id="k-evaluated">–</span><span class="kpi-sub" id="k-evaluated-sub"></span></div>
+        <div class="kpi"><span class="kpi-label">Strategy matches</span><span class="kpi-value" id="k-matches">–</span><span class="kpi-sub" id="k-matches-sub"></span></div>
+        <div class="kpi"><span class="kpi-label">New 52W highs today</span><span class="kpi-value" id="k-highs">–</span><span class="kpi-sub">market breadth</span></div>
+        <div class="kpi"><span class="kpi-label">Data as of</span><span class="kpi-value" id="k-date">–</span><span class="kpi-sub" id="k-date-sub"></span></div>
+      </div>
+
+      <nav class="tabs" role="tablist">
+        <button role="tab" class="tab active" data-tab="ranking">Ranking</button>
+        <button role="tab" class="tab" data-tab="charts">Price charts</button>
+        <button role="tab" class="tab" data-tab="detail">Stock detail</button>
+        <button role="tab" class="tab" data-tab="breadth">Market breadth</button>
+      </nav>
+
+      <div class="tab-panel" id="tab-ranking">
+        <div class="grid-rank">
+          <div class="card">
+            <h3 id="rank-title">Top stocks</h3>
+            <div id="rank-chart" class="chart"></div>
+          </div>
+          <div class="card">
+            <div class="card-head">
+              <h3>Results <span class="count" id="result-count"></span></h3>
+              <div class="card-tools">
+                <input type="search" id="table-search" placeholder="Filter symbol…">
+                <button class="btn small" id="download">Download CSV</button>
+              </div>
+            </div>
+            <div class="table-wrap"><table id="table"></table></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-charts" hidden>
+        <p class="hint" id="charts-caption"></p>
+        <div id="legend-row" class="legend-row"></div>
+        <div id="multiples" class="multiples"></div>
+      </div>
+
+      <div class="tab-panel" id="tab-detail" hidden>
+        <div class="detail-head">
+          <label class="field inline"><span>Stock</span><select id="stock-select"></select></label>
+          <button class="btn select-btn" id="detail-select-btn">+ Select for backtest</button>
+        </div>
+        <div class="kpis small" id="detail-kpis"></div>
+        <div class="card"><div id="detail-chart" class="chart tall"></div></div>
+      </div>
+
+      <div class="tab-panel" id="tab-breadth" hidden>
+        <div class="grid-2">
+          <div class="card">
+            <h3 id="dist-title">Score distribution</h3>
+            <p class="hint">Blue = stocks that pass this strategy.</p>
+            <div id="dist-chart" class="chart"></div>
+          </div>
+          <div class="card">
+            <h3>Distance from 52-week high</h3>
+            <p class="hint">Many stocks near their highs = broad strength; a thin left tail = narrow leadership.</p>
+            <div id="high-chart" class="chart"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="selection-bar" id="selection-bar" hidden>
+      <div class="sel-info">
+        <b id="sel-count">0 stocks selected</b>
+        <div class="chips" id="sel-chips"></div>
+      </div>
+      <div class="sel-actions">
+        <button class="btn small" id="sel-clear">Clear</button>
+        <button class="btn" id="sel-trade" title="Trade these with your last backtest strategy on Megabull (virtual money)">Paper trade →</button>
+        <button class="btn primary" id="sel-backtest">Backtest selected →</button>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="/static/app.js?v=20261010"></script>
+<script src="/static/screener.js?v=20261010"></script>
+</body>
+</html>

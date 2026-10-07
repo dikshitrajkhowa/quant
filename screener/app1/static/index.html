@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NSE Quant</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%232a78d6'/><path d='M6 22l7-7 5 4 8-10' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+  <link rel="stylesheet" href="/static/styles.css?v=20261010">
+</head>
+<body>
+<header class="topnav" id="topnav"></header>
+
+<main class="landing">
+  <section class="hero">
+    <h1>NSE Quant workspace</h1>
+    <p class="sub">Screen the market with rule-based strategies, backtest the stocks you pick, and paper-trade them on Megabull.</p>
+  </section>
+
+  <section class="mode-grid">
+    <a class="mode-card" href="/screener">
+      <span class="mode-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/><path d="M8 13l2-2 2 1.5 2.5-3"/></svg>
+      </span>
+      <h2>Screener</h2>
+      <p>Run 10 strategies — 52-week highs, breakouts, golden crosses, RSI pullbacks and more — across NSE stocks. Pick the ones you like for backtesting.</p>
+      <span class="mode-cta">Open screener →</span>
+    </a>
+
+    <a class="mode-card" href="/backtest" id="backtest-card">
+      <span class="mode-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/><path d="M3 8h2M3 13h2"/></svg>
+      </span>
+      <h2>Backtest</h2>
+      <p>See how a strategy would have performed on your selected stocks using historical prices.</p>
+      <span class="mode-status" id="backtest-status"></span>
+      <span class="mode-cta">Open backtest →</span>
+    </a>
+
+    <a class="mode-card" href="/trade">
+      <span class="mode-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M17 4v16"/><rect x="4" y="8" width="6" height="7" rx="1"/><rect x="14" y="6" width="6" height="9" rx="1"/></svg>
+      </span>
+      <h2>Trade</h2>
+      <p>Run a backtested strategy live on Megabull paper trading (virtual money) and watch its orders and P&amp;L.</p>
+      <span class="mode-status" id="trade-status"></span>
+      <span class="mode-cta">Open trading →</span>
+    </a>
+  </section>
+</main>
+
+<script src="/static/app.js?v=20261010"></script>
+<script>
+  // Show how many stocks are waiting in the backtest basket.
+  const n = Selection.load().length;
+  $("#backtest-status").textContent = n ? `${n} stock${n === 1 ? "" : "s"} in your backtest list` : "";
+  if (n) $("#backtest-card").href = Selection.backtestUrl();
+  api("/api/trade/status").then((st) => {
+    const live = st.engine.sessions.filter((x) => !["stopped", "error"].includes(x.status));
+    const pos = live.filter((x) => x.position).length;
+    $("#trade-status").textContent = live.length ? `${live.length} active session${live.length > 1 ? "s" : ""}${pos ? ` · ${pos} open position${pos > 1 ? "s" : ""}` : ""}` : "";
+  }).catch(() => {});
+</script>
+</body>
+</html>

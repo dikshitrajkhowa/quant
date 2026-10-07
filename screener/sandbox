@@ -1,0 +1,13 @@
+curl --request POST \
+  --url https://sandbox.dhan.co/v2/charts/intraday \
+  --header 'Accept: application/json' \
+  --header 'Content-Type: application/json' \
+  --header 'access-token: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbkNvbnN1bWVyVHlwZSI6IlNFTEYiLCJwYXJ0bmVySWQiOiIiLCJkaGFuQ2xpZW50SWQiOiIyNjA5MTg0ODg3Iiwid2ViaG9va1VybCI6IiIsImlzcyI6ImRoYW4iLCJleHAiOjE3OTA4MDUzMTB9.gaqlKCN78P2PHFcBSXmXFBi5ok8FQR5a3gGD7j3WcIwhtuIGI4GVtxgT44NdQf2Yf17sUSgnqfwKDH30VgW6kw' \
+  --data '{
+  "securityId": "13",
+  "exchangeSegment": "IDX_I",
+  "instrument": "INDEX",
+  "interval": "1",
+  "fromDate": "2026-09-28",
+  "toDate": "2026-09-29"
+}'

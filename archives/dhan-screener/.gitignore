@@ -1,0 +1,6 @@
+.env
+.dhan_cache/
+__pycache__/
+screener_report.html
+screener_scores.csv
+reports/

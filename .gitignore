@@ -30,3 +30,9 @@ Thumbs.db
 .env.local
 .vscode/
 .idea/
+# Screener cache/output
+screener/.cache/
+screener/output/
+
+# Screener runtime data (trading state, logs, API spec cache)
+screener/app1/data/

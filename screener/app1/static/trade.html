@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Trade · NSE Quant</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%232a78d6'/><path d='M6 22l7-7 5 4 8-10' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+  <link rel="stylesheet" href="/static/styles.css?v=20261010">
+</head>
+<body>
+<header class="topnav" id="topnav"></header>
+<main class="page">
+  <header class="page-head">
+    <div>
+      <h1>Paper trading</h1>
+      <p class="sub">Run a backtested strategy live on <a href="https://trade.megabull.in" target="_blank" rel="noopener">Megabull</a> with virtual money. Orders are sent as each candle completes, using the same rules as the backtest.</p>
+    </div>
+    <div class="status-pills" id="status-pills"></div>
+  </header>
+
+  <div id="alert" class="alert" hidden></div>
+
+  <!-- Connection -->
+  <section class="card" id="conn-card">
+    <div class="card-head">
+      <h3>Megabull connection</h3>
+      <div class="card-tools">
+        <button class="btn small" id="reload-env" title="Re-read app1/.env (after you paste a new key)">Reload API key</button>
+        <button class="btn small" id="show-mapping">Order mapping</button>
+        <button class="btn small" id="test-order" title="BUY 1 share then SELL it (virtual money) to verify orders work">Send test order</button>
+      </div>
+    </div>
+    <div class="conn" id="conn"></div>
+    <div id="mapping" class="mapping" hidden></div>
+    <pre id="test-result" class="raw" hidden></pre>
+  </section>
+
+  <!-- Start -->
+  <section class="card" id="start-card">
+    <div class="card-head">
+      <h3>Start trading</h3>
+      <span class="hint" id="origin-note"></span>
+    </div>
+    <div class="setup-layout">
+      <div>
+        <div class="field">
+          <span>Stocks</span>
+          <div class="chips" id="tr-chips"></div>
+          <form id="tr-add" class="add-form" style="margin-top:8px">
+            <input type="text" id="tr-add-input" placeholder="Add ticker, e.g. TCS" autocomplete="off" aria-label="Ticker to add">
+            <button class="btn small" type="submit">Add</button>
+          </form>
+        </div>
+        <label class="field"><span>Strategy</span><select id="tr-strategy"></select></label>
+        <ul class="rules" id="tr-rules"></ul>
+        <label class="field"><span>Candle data source</span><select id="tr-source"></select></label>
+        <label class="field toggle" title="Run the strategy and log signals without sending orders to Megabull">
+          <span>Dry run (log signals, don't send orders)</span>
+          <span class="switch"><input type="checkbox" id="tr-dry"><span class="slider"></span></span>
+        </label>
+      </div>
+      <div class="param-grid" id="tr-params"></div>
+    </div>
+    <div class="run-row">
+      <button class="btn primary" id="tr-start">Start paper trading</button>
+      <span class="hint" id="tr-start-hint"></span>
+    </div>
+  </section>
+
+  <!-- Sessions -->
+  <section class="card">
+    <div class="card-head">
+      <h3>Trading sessions <span class="count" id="sess-count"></span></h3>
+      <div class="card-tools">
+        <span class="hint" id="pnl-total"></span>
+        <button class="btn small danger" id="stop-all">Stop all &amp; square off</button>
+      </div>
+    </div>
+    <div class="table-wrap"><table id="sess-table"></table></div>
+  </section>
+
+  <div class="grid-2">
+    <section class="card">
+      <div class="card-head"><h3>Activity log</h3><span class="hint">Newest first · also saved to app1/data/trading.log</span></div>
+      <ul class="activity" id="activity"></ul>
+    </section>
+    <section class="card">
+      <div class="card-head">
+        <h3>Megabull account</h3>
+        <button class="btn small" id="broker-refresh">Refresh</button>
+      </div>
+      <div id="broker"></div>
+    </section>
+  </div>
+
+  <section class="card">
+    <div class="card-head"><h3>Closed trades</h3><button class="btn small" id="trades-csv">Download CSV</button></div>
+    <div class="table-wrap"><table id="trades-table"></table></div>
+  </section>
+</main>
+<script src="/static/app.js?v=20261010"></script>
+<script src="/static/trade.js?v=20261010"></script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+pandas>=2.0
+numpy
+requests
+streamlit>=1.50
+niftystocks
+yfinance
+matplotlib
+plotly>=5.20
+# TradingView data source (optional; unofficial API). On Python < 3.11 use: pip install tradingview-datafeed
+tvkit>=0.18 ; python_version >= "3.11"

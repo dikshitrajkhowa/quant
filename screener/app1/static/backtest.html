@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Backtest · NSE Quant</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%232a78d6'/><path d='M6 22l7-7 5 4 8-10' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+  <link rel="stylesheet" href="/static/styles.css?v=20261010">
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+</head>
+<body>
+<header class="topnav" id="topnav"></header>
+<main class="page">
+  <header class="page-head">
+    <div>
+      <h1>Backtest</h1>
+      <p class="sub" id="subtitle">Test an intraday strategy on the stocks you picked in the screener and see whether it would have made money.</p>
+    </div>
+    <a class="btn" href="/screener">← Back to screener</a>
+  </header>
+
+  <div id="alert" class="alert" hidden></div>
+
+  <section class="empty" id="empty" hidden>
+    <p><b>No stocks selected.</b></p>
+    <p class="hint">Tick stocks in the <a href="/screener">Screener</a> and click <b>Backtest selected</b>, or add tickers below.</p>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h3>Selected stocks <span class="count" id="bt-count"></span></h3>
+      <div class="card-tools">
+        <form id="add-form" class="add-form">
+          <input type="text" id="add-input" placeholder="Add ticker, e.g. TCS" autocomplete="off" aria-label="Ticker to add">
+          <button class="btn small" type="submit">Add</button>
+        </form>
+        <button class="btn small" id="clear-all">Clear all</button>
+      </div>
+    </div>
+    <div class="table-wrap"><table id="bt-table"></table></div>
+    <p class="hint" id="bt-loading" hidden>Loading prices…</p>
+  </section>
+
+  <section class="card" id="perf-card" hidden>
+    <h3>Performance over the last year</h3>
+    <p class="hint" id="perf-hint">Each stock rebased to 100 at the start of the window.</p>
+    <div id="legend" class="legend-row"></div>
+    <div id="perf-chart" class="chart"></div>
+  </section>
+
+  <section class="card" id="setup">
+    <div class="card-head">
+      <h3>Backtest setup</h3>
+    </div>
+    <div class="setup-layout">
+      <div>
+        <label class="field"><span>Strategy</span><select id="bt-strategy"></select></label>
+        <label class="field"><span>Data source</span><select id="bt-source"></select></label>
+        <p class="hint" id="bt-source-hint"></p>
+        <ul class="rules" id="bt-rules"></ul>
+      </div>
+      <div class="param-grid" id="bt-params"></div>
+    </div>
+    <div class="run-row">
+      <button class="btn primary" id="bt-run">Run backtest</button>
+      <span class="hint" id="bt-run-hint"></span>
+    </div>
+  </section>
+
+  <section id="bt-results" hidden>
+    <div class="verdict" id="verdict">
+      <div class="verdict-icon" id="verdict-icon" aria-hidden="true"></div>
+      <div>
+        <div class="verdict-label" id="verdict-label"></div>
+        <div class="verdict-reason" id="verdict-reason"></div>
+        <div class="verdict-meta" id="verdict-meta"></div>
+      </div>
+      <button class="btn primary verdict-action" id="bt-trade" title="Run this strategy live on Megabull paper trading">Paper trade these stocks →</button>
+    </div>
+
+    <div class="kpis six" id="bt-kpis"></div>
+    <div class="side-split card" id="side-split" hidden></div>
+
+    <div class="grid-2">
+      <section class="card">
+        <h3>Equity curve</h3>
+        <p class="hint">Cumulative R after costs, all stocks combined, in order of exit time.</p>
+        <div id="equity-chart" class="chart"></div>
+      </section>
+      <section class="card">
+        <h3>Exit reasons &amp; R distribution</h3>
+        <p class="hint">How trades ended, and the spread of results per trade (net R).</p>
+        <div id="dist-chart" class="chart"></div>
+      </section>
+    </div>
+
+    <section class="card">
+      <div class="card-head"><h3>Results by stock</h3><span class="hint">Click a row to see its trades on the chart.</span></div>
+      <div class="table-wrap"><table id="stock-table"></table></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h3>Trades on chart</h3>
+        <label class="field inline compact"><span>Stock</span><select id="chart-stock"></select></label>
+      </div>
+      <p class="hint"><span id="chart-hint">Candles, showing the most recent part — drag the slider below the chart to scroll back.</span> ▲ long / ▼ short entry (green: won, red: lost) · ✕ = exit. Hover a marker for entry, stop and target.</p>
+      <div id="trade-chart" class="chart tall"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h3>Trade log <span class="count" id="trade-count"></span></h3>
+        <div class="card-tools">
+          <select id="trade-filter" aria-label="Filter trades by stock"></select>
+          <button class="btn small" id="trade-csv">Download CSV</button>
+        </div>
+      </div>
+      <div class="table-wrap"><table id="trade-table"></table></div>
+    </section>
+  </section>
+</main>
+<script src="/static/app.js?v=20261010"></script>
+<script src="/static/backtest.js?v=20261010"></script>
+</body>
+</html>
